@@ -1,0 +1,14 @@
+pre-commit:
+  commands:
+    ruff-check:
+      tags: python lint
+      glob: "*.py"
+      run: ruff check --fix {staged_files}
+    ruff-format:
+      tags: python format
+      glob: "*.py"
+      run: ruff format {staged_files} && git add {staged_files}
+    shellcheck:
+      tags: shell lint
+      glob: "*.sh"
+      run: shellcheck {staged_files}
