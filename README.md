@@ -60,19 +60,19 @@ Settings are read from three sources, in order of precedence:
 
 **CLI flag → environment variable → `config.conf` → built-in default.**
 
-| `config.conf` key | Environment variable | CLI flag | Default |
+| CLI flag | Environment variable | `config.conf` key | Default |
 |---|---|---|---|
-| `mkvmerge_path` | `MKVMERGE_PATH` | `--mkvmerge` | `mkvmerge` (search PATH) |
-| `log_level` | `LOG_LEVEL` | `--log-level` | `info` |
-| `dry_run` | `DRY_RUN` | `--dry-run` / `--no-dry-run` | `false` |
-| `cleanup_mode` | `CLEANUP_MODE` | `--cleanup` | `keep` |
-| `backup_dir` | `BACKUP_DIR` | `--backup-dir` | `.merged-parts` |
-| `max_parts` | `MAX_PARTS` | `--max-parts` | `9` |
-| `min_part_size` | `MIN_PART_SIZE` | `--min-part-size` | `10485760` |
-| `sonarr_url` | `SONARR_URL` | `--sonarr-url` | *(none)* |
-| `sonarr_apikey` | `SONARR_APIKEY` | `--sonarr-apikey` | *(none)* |
-| `sonarr_trigger` | `SONARR_TRIGGER` | `--no-sonarr-trigger` | `true` |
-| `check_tracks` | `CHECK_TRACKS` | `--check-tracks` | `true` |
+| `--mkvmerge` | `MKVMERGE_PATH` | `mkvmerge_path` | `mkvmerge` (search PATH) |
+| `--log-level` | `LOG_LEVEL` | `log_level` | `info` |
+| `--dry-run` / `--no-dry-run` | `DRY_RUN` | `dry_run` | `false` |
+| `--cleanup` | `CLEANUP_MODE` | `cleanup_mode` | `keep` |
+| `--backup-dir` | `BACKUP_DIR` | `backup_dir` | `.merged-parts` |
+| `--max-parts` | `MAX_PARTS` | `max_parts` | `9` |
+| `--min-part-size` | `MIN_PART_SIZE` | `min_part_size` | `10485760` |
+| `--sonarr-url` | `SONARR_URL` | `sonarr_url` | *(none)* |
+| `--sonarr-apikey` | `SONARR_APIKEY` | `sonarr_apikey` | *(none)* |
+| `--no-sonarr-trigger` | `SONARR_TRIGGER` | `sonarr_trigger` | `true` |
+| `--check-tracks` | `CHECK_TRACKS` | `check_tracks` | `true` |
 
 Notes:
 
