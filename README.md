@@ -122,30 +122,23 @@ python3 sonarr_mkv_merger.py --dir "/mnt/media/downloads/MASH.S04.REPACK.1080p.A
 python3 sonarr_mkv_merger.py --dry-run --scan /mnt/media/downloads
 ```
 
-## About the `importMode: copy` / hardlink behavior
+## How Sonarr import works (`importMode: copy` + hardlinks)
 
-**This is the most important detail in the whole project.**
-
-After merging, the script triggers Sonarr's `DownloadedEpisodesScan` API command
-**with `importMode: "copy"`** - not the default:
+After a successful merge the script calls Sonarr's `DownloadedEpisodesScan` API
+with `importMode: "copy"`:
 
 ```json
 { "name": "DownloadedEpisodesScan", "path": "/downloads/...", "importMode": "copy" }
 ```
 
-Why it matters:
+With Sonarr's **Copy using Hardlinks** setting enabled, this creates a hardlink
+in your library pointing to the same on-disk data as the merged file in the
+download folder. The original split parts stay in place, so the torrent/NZB
+keeps seeding and no data is duplicated.
 
-- The default (no `importMode`, i.e. `move`) makes Sonarr **move** the file into
-  the library, **stripping it out of the seeding torrent folder** and breaking
-  your ratio.
-- With `importMode: "copy"` **and** Sonarr's `copyUsingHardlinks` setting enabled,
-  Sonarr creates a **hardlink** in the library instead. Both paths point to the
-  same data on disk - the merged file is importable while the original parts
-  remain in place for seeding.
-
-**Prerequisite:** in Sonarr, enable **Settings → Media Management → Importing →
-Copy using Hardlinks**. Without this, `copy` still duplicates the data rather
-than hardlinking, which wastes space.
+**Prerequisite:** enable **Settings → Media Management → Importing → Copy using
+Hardlinks** in Sonarr. Without it, `copy` duplicates the file instead of
+hardlinking, which wastes disk space.
 
 ## Behavior & safety
 

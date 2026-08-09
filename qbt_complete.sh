@@ -3,7 +3,7 @@
 # Configure qBittorrent AutoRun as:
 #   CROSS_SEED_URL="http://cross-seed:2468/api/webhook" \
 #   CROSS_SEED_KEY="your-key" \
-#   bash /opt/sonarr-mkv-merger/qbt_complete.sh "%I" "%F"
+#   bash /path/to/qbt_complete.sh "%I" "%F"
 #
 # %I = infoHash, %F = content path (folder for multi-file, file for single-file).
 #

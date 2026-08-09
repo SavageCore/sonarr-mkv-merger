@@ -362,9 +362,8 @@ def trigger_sonarr(cfg, directory):
         LOG.info("No SONARR_APIKEY configured - skipping Sonarr trigger.")
         return
     url = url.rstrip("/") + "/api/v3/command"
-    # importMode "copy" (not the default "move"): the folder has no download-client
-    # association, so a plain scan falls back to Move and empties the torrent folder.
-    # With copyUsingHardlinks enabled Sonarr hardlinks into the library instead.
+    # importMode "copy" so Sonarr hardlinks (with copyUsingHardlinks) into the
+    # library; the original parts stay in the download folder for seeding.
     payload = json.dumps({"name": "DownloadedEpisodesScan", "path": directory, "importMode": "copy"}).encode()
     req = urllib.request.Request(url, data=payload, method="POST")
     req.add_header("X-Api-Key", apikey)
