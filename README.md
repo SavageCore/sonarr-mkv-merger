@@ -1,27 +1,8 @@
 # sonarr-mkv-merger
 
-Merge split/parted TV episode releases (e.g. `Show.S04E01a` + `Show.S04E01b`)
-losslessly into a single episode file, keep the original parts for seeding, and
+Merge split TV episode releases (e.g. `MASH.S04E01a` + `MASH.S04E01b`)
+losslessly into a single episode file with mkvmerge, keep the original parts for seeding, and
 trigger Sonarr to import the merged result.
-
-Zero external Python dependencies - pure standard library.
-
-## What it does and why
-
-Some scene releases split an episode across multiple files with suffixes like
-`a`/`b`, `Part 1`/`Part 2`, or `CD1`/`CD2`:
-
-```
-Show.S04E01a.mkv   +   Show.S04E01b.mkv   →   Show.S04E01.mkv
-```
-
-Sonarr cannot import these as a single episode. This tool:
-
-1. Detects split groups in a download folder.
-2. Merges them **losslessly** with `mkvmerge` (no re-encoding).
-3. Leaves the original parts **untouched** by default, so the torrent/NZB keeps
-   seeding.
-4. Triggers Sonarr to import the new merged file.
 
 ## Requirements
 
@@ -126,21 +107,9 @@ python3 /path/to/sonarr_mkv_merger.py --dir "%F"
 
 1. **Sonarr → Settings → Connect → + → Custom Script**.
 2. Path: `/path/to/sonarr_mkv_merger.py`.
-3. Event: **On Download** (not "On Import Complete" - that event only fires once
-   a whole batch finishes importing, which a split release never does).
+3. Event: **On File Import**
 4. No arguments needed: the script auto-detects the `Sonarr_EpisodeFile_SourceFolder`
    / `Sonarr_EpisodeFile_Path` environment variables and scans that folder.
-
-### SABnzbd
-
-In **SABnzbd → Switches → Scripts**, add a script that calls the merger with the
-downloaded path (`$1`):
-
-```
-python3 /path/to/sonarr_mkv_merger.py "$1"
-```
-
-Enable the script and assign it to your categories.
 
 ### Manual scan / re-run
 
@@ -149,7 +118,7 @@ episodes whose merged output already exists:
 
 ```sh
 python3 sonarr_mkv_merger.py --scan /mnt/media/downloads
-python3 sonarr_mkv_merger.py --dir "/mnt/media/downloads/Show.S04E01.1080p"
+python3 sonarr_mkv_merger.py --dir "/mnt/media/downloads/MASH.S04.REPACK.1080p.AMZN.WEB-DL.DD+2.0.H.264-AJP69"
 python3 sonarr_mkv_merger.py --dry-run --scan /mnt/media/downloads
 ```
 
@@ -192,10 +161,31 @@ than hardlinking, which wastes space.
 
 ## Integrations
 
-- **`qbt_complete.sh`** - optional qBittorrent AutoRun wrapper (see above). The
-  public build runs only the merger. If you use [cross-seed](https://github.com/cross-seed/cross-seed),
-  add your own announce call before the merger block:
-  `curl -sS -XPOST "http://<cross-seed-host>:2468/api/webhook?apikey=<key>" --data-urlencode "infoHash=$INFO_HASH"`.
+### `qbt_complete.sh` - combined cross-seed + merger hook
+
+`qbt_complete.sh` is a qBittorrent AutoRun wrapper that runs **both** a
+[cross-seed](https://github.com/cross-seed/cross-seed) announce and the merger
+in one completion hook. It only makes sense for users who are cross-seeding too
+- if you are not, call the merger directly (see the qBittorrent section above).
+
+The hook announces to cross-seed **first** (before the merger touches the
+folder), then runs the merger. Configure it in **qBittorrent → Options →
+Downloads → Run external program on torrent completion**:
+
+```
+CROSS_SEED_URL="http://cross-seed:2468/api/webhook" \
+CROSS_SEED_KEY="your-cross-seed-apikey" \
+bash /path/to/qbt_complete.sh "%I" "%F"
+```
+
+- `%I` = info hash (used for the announce), `%F` = content path (used for the
+  merger).
+- `CROSS_SEED_URL` / `CROSS_SEED_KEY` are **optional**. If both are set and an
+  info hash is present, the announce runs; if either is unset, the announce is
+  skipped and **only the merger runs**.
+- The merger call respects the `MKV_MERGER_SCRIPT` env var, which overrides the
+  default `sonarr_mkv_merger.py` path next to the hook.
+- Logs go to `/var/log/qbt_complete.log`.
 
 ## License
 
