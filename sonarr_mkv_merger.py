@@ -38,26 +38,59 @@ DEFAULT_MIN_PART_SIZE = 10 * 1024 * 1024
 
 def parse_args(argv):
     p = argparse.ArgumentParser(description="Merge split multi-part episodes losslessly.")
-    p.add_argument("paths", nargs="*", help="Directory(ies) to process (SABnzbd passes a path here).")
-    p.add_argument("--dir", action="append", default=[], help="Process one release folder. Repeatable.")
-    p.add_argument("--scan", action="append", default=[], help="Recursively scan a root for release folders.")
+    p.add_argument(
+        "paths", nargs="*", help="Directory(ies) to process (SABnzbd passes a path here)."
+    )
+    p.add_argument(
+        "--dir", action="append", default=[], help="Process one release folder. Repeatable."
+    )
+    p.add_argument(
+        "--scan", action="append", default=[], help="Recursively scan a root for release folders."
+    )
     p.add_argument("--config", default=None, help="INI config file (optional).")
-    p.add_argument("--dry-run", action="store_true", default=None, help="Detect and report, make no changes.")
-    p.add_argument("--no-dry-run", dest="dry_run", action="store_false", help="Force real run (overrides config/env).")
+    p.add_argument(
+        "--dry-run", action="store_true", default=None, help="Detect and report, make no changes."
+    )
+    p.add_argument(
+        "--no-dry-run",
+        dest="dry_run",
+        action="store_false",
+        help="Force real run (overrides config/env).",
+    )
     p.add_argument("--log-level", default=None, help="debug|info|warning|error")
     p.add_argument("--mkvmerge", default=None, help="Path to mkvmerge binary.")
-    p.add_argument("--cleanup", default=None, choices=["keep", "move", "delete"],
-                   help="What to do with original parts after a verified merge (default: keep).")
-    p.add_argument("--backup-dir", default=None,
-                   help="For cleanup=move: subfolder to move parts into (default: '.merged-parts').")
+    p.add_argument(
+        "--cleanup",
+        default=None,
+        choices=["keep", "move", "delete"],
+        help="What to do with original parts after a verified merge (default: keep).",
+    )
+    p.add_argument(
+        "--backup-dir",
+        default=None,
+        help="For cleanup=move: subfolder to move parts into (default: '.merged-parts').",
+    )
     p.add_argument("--max-parts", type=int, default=None, help="Maximum parts per episode group.")
-    p.add_argument("--min-part-size", type=int, default=None, help="Minimum part size in bytes to trust a part.")
+    p.add_argument(
+        "--min-part-size",
+        type=int,
+        default=None,
+        help="Minimum part size in bytes to trust a part.",
+    )
     p.add_argument("--sonarr-url", default=None, help="Sonarr base URL e.g. http://127.0.0.1:8989")
     p.add_argument("--sonarr-apikey", default=None, help="Sonarr API key.")
-    p.add_argument("--no-sonarr-trigger", action="store_true", default=None,
-                   help="Disable the Sonarr DownloadedEpisodesScan trigger.")
-    p.add_argument("--check-tracks", action="store_true", default=None,
-                   help="Validate track layout of each part with mkvmerge -i before merging.")
+    p.add_argument(
+        "--no-sonarr-trigger",
+        action="store_true",
+        default=None,
+        help="Disable the Sonarr DownloadedEpisodesScan trigger.",
+    )
+    p.add_argument(
+        "--check-tracks",
+        action="store_true",
+        default=None,
+        help="Validate track layout of each part with mkvmerge -i before merging.",
+    )
     return p.parse_args(argv)
 
 
@@ -66,8 +99,12 @@ def load_config(cli):
     cfg["defaults"] = {}
     if cli.config:
         cfg.read(cli.config)
-    cfg.read(["/etc/sonarr-mkv-merger/config.conf",
-              os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.conf")])
+    cfg.read(
+        [
+            "/etc/sonarr-mkv-merger/config.conf",
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.conf"),
+        ]
+    )
 
     env = os.environ
     defaults = cfg["defaults"] if cfg.has_section("defaults") else {}
@@ -93,7 +130,9 @@ def load_config(cli):
     cleanup = pick(cli.cleanup, "CLEANUP_MODE", "cleanup_mode", "keep").lower()
     backup_dir = pick(cli.backup_dir, "BACKUP_DIR", "backup_dir", ".merged-parts")
     max_parts = int(pick(cli.max_parts, "MAX_PARTS", "max_parts", DEFAULT_MAX_PARTS))
-    min_part_size = int(pick(cli.min_part_size, "MIN_PART_SIZE", "min_part_size", DEFAULT_MIN_PART_SIZE))
+    min_part_size = int(
+        pick(cli.min_part_size, "MIN_PART_SIZE", "min_part_size", DEFAULT_MIN_PART_SIZE)
+    )
 
     sonarr_url = pick(cli.sonarr_url, "SONARR_URL", "sonarr_url", None)
     sonarr_apikey = pick(cli.sonarr_apikey, "SONARR_APIKEY", "sonarr_apikey", None)
@@ -172,10 +211,15 @@ def parse_part(filename):
     if m:
         episode = m.group("ep")
         letter = m.group("letter")
-        base = stem[: m.start("letter")] + stem[m.end("letter"):]
+        base = stem[: m.start("letter")] + stem[m.end("letter") :]
         base = normalize_base(base)
-        return {"episode": episode, "marker_type": "letter", "marker": letter,
-                "sort_key": (0, ord(letter)), "base": base}
+        return {
+            "episode": episode,
+            "marker_type": "letter",
+            "marker": letter,
+            "sort_key": (0, ord(letter)),
+            "base": base,
+        }
     return None
 
 
@@ -230,7 +274,9 @@ def contiguous(keys):
 
 def mkvmerge_info(mkvmerge, path):
     try:
-        proc = subprocess.run([mkvmerge, "-i", "-J", path], capture_output=True, text=True, timeout=60)
+        proc = subprocess.run(
+            [mkvmerge, "-i", "-J", path], capture_output=True, text=True, timeout=60
+        )
         if proc.returncode != 0:
             return None
         return json.loads(proc.stdout)
@@ -247,7 +293,9 @@ def track_layout(info):
 def parts_sane(group, cfg):
     for part in group["members"]:
         if part["size"] < cfg["min_part_size"]:
-            LOG.error("Part too small, refusing to merge: %s (%d bytes)", part["name"], part["size"])
+            LOG.error(
+                "Part too small, refusing to merge: %s (%d bytes)", part["name"], part["size"]
+            )
             return False
     if cfg["check_tracks"]:
         layouts = []
@@ -258,7 +306,10 @@ def parts_sane(group, cfg):
                 return False
             layouts.append(track_layout(info))
         if len(set(layouts)) != 1:
-            LOG.error("Parts have different track layouts - refusing to merge %r (possible desync).", group["base"])
+            LOG.error(
+                "Parts have different track layouts - refusing to merge %r (possible desync).",
+                group["base"],
+            )
             return False
     return True
 
@@ -278,7 +329,11 @@ def merge_parts(group, directory, cfg):
             cmd.append("+")
         cmd.append(part["path"])
 
-    LOG.info("Merging %s -> %s", " + ".join(p["name"] for p in group["members"]), os.path.basename(output_path))
+    LOG.info(
+        "Merging %s -> %s",
+        " + ".join(p["name"] for p in group["members"]),
+        os.path.basename(output_path),
+    )
     if cfg["dry_run"]:
         return None
 
@@ -289,7 +344,9 @@ def merge_parts(group, directory, cfg):
         return None
 
     if proc.returncode != 0:
-        LOG.error("mkvmerge failed (exit %s):\n%s", proc.returncode, (proc.stderr or proc.stdout)[-4000:])
+        LOG.error(
+            "mkvmerge failed (exit %s):\n%s", proc.returncode, (proc.stderr or proc.stdout)[-4000:]
+        )
         if os.path.exists(output_path + ".part"):
             os.remove(output_path + ".part")
         return None
@@ -346,7 +403,9 @@ def trigger_sonarr(cfg, directory):
     url = url.rstrip("/") + "/api/v3/command"
     # importMode "copy" so Sonarr hardlinks (with copyUsingHardlinks) into the
     # library; the original parts stay in the download folder for seeding.
-    payload = json.dumps({"name": "DownloadedEpisodesScan", "path": directory, "importMode": "copy"}).encode()
+    payload = json.dumps(
+        {"name": "DownloadedEpisodesScan", "path": directory, "importMode": "copy"}
+    ).encode()
     req = urllib.request.Request(url, data=payload, method="POST")
     req.add_header("X-Api-Key", apikey)
     req.add_header("Content-Type", "application/json")
@@ -357,7 +416,11 @@ def trigger_sonarr(cfg, directory):
         with urllib.request.urlopen(req, timeout=15) as resp:
             LOG.info("Sonarr command accepted: HTTP %s", resp.status)
     except urllib.error.HTTPError as exc:
-        LOG.error("Sonarr trigger failed (HTTP %s): %s", exc.code, exc.read().decode(errors="replace")[:500])
+        LOG.error(
+            "Sonarr trigger failed (HTTP %s): %s",
+            exc.code,
+            exc.read().decode(errors="replace")[:500],
+        )
     except urllib.error.URLError as exc:
         LOG.error("Sonarr trigger failed: %s", exc)
 
@@ -396,7 +459,9 @@ def main(argv=None):
     if not cfg["dry_run"]:
         mkvmerge = shutil.which(cfg["mkvmerge"]) or cfg["mkvmerge"]
         if not os.path.isfile(mkvmerge):
-            LOG.error("mkvmerge not found at %s - install mkvtoolnix or set MKVMERGE_PATH.", mkvmerge)
+            LOG.error(
+                "mkvmerge not found at %s - install mkvtoolnix or set MKVMERGE_PATH.", mkvmerge
+            )
             return 2
         cfg["mkvmerge"] = mkvmerge
 

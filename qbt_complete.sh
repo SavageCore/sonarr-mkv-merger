@@ -31,10 +31,12 @@ fi
 # 1) cross-seed announce (before the merger modifies the folder)
 if [[ -n "$INFO_HASH" && -n "${CROSS_SEED_URL:-}" && -n "${CROSS_SEED_KEY:-}" ]]; then
     if command -v curl >/dev/null 2>&1; then
-        curl -sS -m 20 -XPOST "$CROSS_SEED_URL?apikey=$CROSS_SEED_KEY" \
-            --data-urlencode "infoHash=$INFO_HASH" >> /var/log/qbt_complete.log 2>&1 \
-            && log "cross-seed: announced $INFO_HASH" \
-            || log "cross-seed: failed for $INFO_HASH (non-fatal)"
+        if curl -sS -m 20 -XPOST "$CROSS_SEED_URL?apikey=$CROSS_SEED_KEY" \
+            --data-urlencode "infoHash=$INFO_HASH" >> /var/log/qbt_complete.log 2>&1; then
+            log "cross-seed: announced $INFO_HASH"
+        else
+            log "cross-seed: failed for $INFO_HASH (non-fatal)"
+        fi
     else
         log "curl not found, skipping cross-seed announce"
     fi
