@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sonarr Multi-Part Episode Auto-Merger.
 
-Detects split episode releases (SxxEyy[a-z], Part/CD tokens), merges the parts
+Detects split episode releases (SxxEyy[a-z]), merges the parts
 losslessly with mkvmerge into a single file, and leaves the original parts
 untouched so a torrent/NZB can keep seeding.
 
@@ -29,10 +29,7 @@ from pathlib import Path
 
 LOG = logging.getLogger("sonarr_mkv_merger")
 
-EPISODE_RE = re.compile(r"(?P<ep>[Ss]\d{1,2}[Ee]\d{2,3})")
 LETTER_MARKER_RE = re.compile(r"(?P<ep>[Ss]\d{1,2}[Ee]\d{2,3})(?P<letter>[a-z])(?=\.|-|_|$)")
-NUMBER_MARKER_RE = re.compile(r"\.?(?:Part|CD|Disc|Pt)\.?[\s_.-]*(\d+)", re.IGNORECASE)
-TITLE_PART_TOKEN_RE = re.compile(r"\.(?:Part|CD|Disc|Pt)\.?\d+", re.IGNORECASE)
 NUM_BEFORE_RES_RE = re.compile(r"\.\d(?=\.\d{3,4}p)")
 
 DEFAULT_MAX_PARTS = 9
@@ -179,22 +176,10 @@ def parse_part(filename):
         base = normalize_base(base)
         return {"episode": episode, "marker_type": "letter", "marker": letter,
                 "sort_key": (0, ord(letter)), "base": base}
-    m = EPISODE_RE.search(stem)
-    if m:
-        episode = m.group("ep")
-        tail = stem[m.end("ep"):]
-        nm = NUMBER_MARKER_RE.search(tail)
-        if nm:
-            number = int(nm.group(1))
-            base = stem[: m.end("ep")] + tail[: nm.start()] + tail[nm.end():]
-            base = normalize_base(base)
-            return {"episode": episode, "marker_type": "number", "marker": number,
-                    "sort_key": (1, number), "base": base}
     return None
 
 
 def normalize_base(base):
-    base = TITLE_PART_TOKEN_RE.sub("", base)
     base = NUM_BEFORE_RES_RE.sub("", base)
     base = re.sub(r"[ _]+", ".", base).strip(".")
     return base
@@ -240,9 +225,6 @@ def contiguous(keys):
     if all(k[0] == 0 for k in keys):
         letters = [k[1] for k in keys]
         return letters == list(range(letters[0], letters[-1] + 1))
-    if all(k[0] == 1 for k in keys):
-        nums = [k[1] for k in keys]
-        return nums == list(range(nums[0], nums[-1] + 1))
     return False
 
 

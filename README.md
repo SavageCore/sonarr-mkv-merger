@@ -122,22 +122,9 @@ python3 sonarr_mkv_merger.py --dir "/mnt/media/downloads/MASH.S04.REPACK.1080p.A
 python3 sonarr_mkv_merger.py --dry-run --scan /mnt/media/downloads
 ```
 
-## How Sonarr import works (`importMode: copy` + hardlinks)
-
-After a successful merge the script calls Sonarr's `DownloadedEpisodesScan` API
-with `importMode: "copy"`:
-
-```json
-{ "name": "DownloadedEpisodesScan", "path": "/downloads/...", "importMode": "copy" }
-```
-
-This imports the merged file into your library as a hardlink pointing to the
-same on-disk data, leaving the original split parts in the download folder so
-the torrent/NZB keeps seeding without duplicating disk space.
-
 ## Behavior & safety
 
-- Detects `SxxEyy[a-z]`, `Part 1/2`, and `CD1/2` markers.
+- Detects `SxxEyy[a-z]` markers.
 - Groups only parts of the **exact same episode base** and requires all
   consecutive parts to be present; non-contiguous groups are skipped.
 - Refuses to merge if any part is below `min_part_size` or if parts fail the
