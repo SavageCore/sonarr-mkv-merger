@@ -130,8 +130,10 @@ python3 sonarr_mkv_merger.py --dry-run --scan /mnt/media/downloads
 - Refuses to merge if any part is below `min_part_size` or if parts fail the
   `mkvmerge -i` track-layout check (possible desync).
 - Merge command: `mkvmerge -o OUT PART1 + PART2` - zero re-encode.
-- Output is written to a `.part` temp file then atomically renamed; originals are
-  only moved/deleted **after** the output exists and is non-empty.
+- Output is written to a `.part` temp file then atomically renamed. Original
+  parts are left untouched by default (`cleanup=keep`); only with
+  `cleanup=move`/`delete` are they moved/removed, and only **after** the output
+  exists and is non-empty.
 - Idempotent: folders whose merged file already exists are skipped.
 
 ## Integrations
