@@ -131,14 +131,9 @@ with `importMode: "copy"`:
 { "name": "DownloadedEpisodesScan", "path": "/downloads/...", "importMode": "copy" }
 ```
 
-With Sonarr's **Copy using Hardlinks** setting enabled, this creates a hardlink
-in your library pointing to the same on-disk data as the merged file in the
-download folder. The original split parts stay in place, so the torrent/NZB
-keeps seeding and no data is duplicated.
-
-**Prerequisite:** enable **Settings → Media Management → Importing → Copy using
-Hardlinks** in Sonarr. Without it, `copy` duplicates the file instead of
-hardlinking, which wastes disk space.
+This imports the merged file into your library as a hardlink pointing to the
+same on-disk data, leaving the original split parts in the download folder so
+the torrent/NZB keeps seeding without duplicating disk space.
 
 ## Behavior & safety
 
